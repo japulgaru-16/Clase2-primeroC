@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clase 2 · Ecuaciones en el plano</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --cream:#FAF6EE; --navy:#16305A; --navy-soft:#E9EFF8;
+  --orange:#F97316; --orange-deep:#C2570A; --orange-soft:#FFF1E4;
+  --ink:#26334D; --muted:#6E7C95; --line:#E4E1D5; --card-line:#E2E6EF;
+  --green:#16A34A; --green-soft:#EAF7EF; --red:#DC2626; --red-soft:#FDECEC;
+  --amber-soft:#FFF4DE; --amber-line:#EFC26B; --amber-ink:#7A5A17;
+  --shadow:0 10px 28px rgba(22,48,90,.10);
+}
+html,body{height:100%}
+body{font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;background:radial-gradient(1200px 800px at 30% 12%, #1B2E5A 0%, #0C1730 62%);overflow:hidden}
+
+#progress{position:fixed;top:0;left:0;height:4px;width:0%;background:var(--orange);z-index:99;transition:width .45s ease;border-radius:0 3px 3px 0}
+
+#stage{position:absolute;top:50%;left:50%;width:1280px;height:720px;transform:translate(-50%,-50%);background:var(--cream);border-radius:16px;overflow:hidden;box-shadow:0 34px 90px rgba(0,0,0,.5);user-select:none;background-image:linear-gradient(rgba(22,48,90,.045) 1px, transparent 1px),linear-gradient(90deg, rgba(22,48,90,.045) 1px, transparent 1px);background-size:40px 40px}
+
+/* ---- diapositivas ---- */
+.slide{position:absolute;inset:0;padding:46px 72px 78px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(46px);transition:opacity .5s ease, transform .5s ease, visibility 0s linear .5s}
+.slide.active{opacity:1;visibility:visible;transform:none;transition:opacity .5s ease, transform .5s ease;z-index:2}
+.slide.before{transform:translateX(-46px)}
+
+.s-head{display:flex;align-items:center;gap:16px}
+.s-title{font-size:38px;font-weight:800;color:var(--navy);letter-spacing:-.6px;line-height:1.1}
+.chip{display:inline-flex;align-items:center;gap:8px;flex:none;background:var(--orange);color:#fff;font-size:12.5px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;padding:8px 15px;border-radius:999px}
+.chip.navy{background:var(--navy)}
+.chip.soft{background:var(--orange-soft);color:var(--orange-deep);border:1.5px solid #F6C79E}
+.chip.ghost{background:#fff;color:var(--navy);border:1.5px solid #C9D6EC}
+.push{margin-left:auto}
+
+.s-foot{position:absolute;left:72px;right:72px;bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:18px;font-size:13px;color:var(--muted);border-top:1.5px solid var(--line);padding-top:11px}
+.s-foot .r{display:flex;align-items:center;gap:18px;font-weight:600}
+.hint{display:inline-flex;align-items:center;color:var(--orange-deep);font-weight:700}
+.hintdot{width:8px;height:8px;border-radius:50%;background:var(--orange);display:inline-block;margin-right:8px;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+
+.card{background:#fff;border:1.5px solid var(--card-line);border-radius:16px;box-shadow:var(--shadow)}
+
+/* matemáticas */
+.math{font-family:Georgia,"Times New Roman",serif}
+.math var{font-style:italic;padding:0 2px}
+
+/* revelado paso a paso */
+.reveal{opacity:0;transform:translateY(16px) scale(.985);transition:opacity .5s ease, transform .5s cubic-bezier(.2,.7,.3,1)}
+.reveal.shown{opacity:1;transform:none}
+
+/* ---- portada ---- */
+.cover{align-items:center;justify-content:center;text-align:center}
+.chiprow{display:flex;gap:12px;margin-bottom:28px}
+.cover h1{font-size:47px;line-height:1.12;letter-spacing:-1.2px;color:var(--navy);font-weight:800}
+.cover .sub{margin-top:14px;font-size:24px;font-weight:700;color:var(--orange)}
+.cred{margin-top:40px;padding:22px 34px;border-radius:20px}
+.cred-grid{display:grid;grid-template-columns:repeat(2,340px);gap:16px 44px}
+.cred-item{display:flex;align-items:center;gap:13px;text-align:left}
+.cred-item .ic{flex:none;width:42px;height:42px;border-radius:12px;background:var(--navy-soft);color:var(--navy);display:flex;align-items:center;justify-content:center}
+.lbl{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.11em;color:var(--muted)}
+.val{font-size:16.5px;font-weight:800;color:var(--navy);line-height:1.3}
+.pair{position:absolute;font-family:Georgia,serif;font-style:italic;font-weight:700;font-size:29px;color:var(--navy);opacity:.12;pointer-events:none}
+
+/* ---- objetivo ---- */
+.oa{display:flex;overflow:hidden;margin-top:20px}
+.oa-bar{flex:none;width:9px;background:var(--orange)}
+.oa-in{padding:24px 34px}
+.oa-k{font-size:13px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--orange-deep);margin-bottom:9px}
+.oa-t{font-size:23px;line-height:1.62;color:var(--navy);font-weight:600}
+.oa-t b{color:var(--orange-deep)}
+.minis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:22px}
+.mini{padding:18px}
+.mic{width:40px;height:40px;border-radius:11px;background:var(--orange-soft);color:var(--orange);display:flex;align-items:center;justify-content:center;margin-bottom:11px}
+.mt{font-size:17.5px;font-weight:800;color:var(--navy)}
+.md{font-size:14.5px;color:var(--muted);line-height:1.5;margin-top:4px}
+
+/* ---- tareas / avisos ---- */
+.task{display:flex;gap:16px;align-items:flex-start;padding:16px 22px;margin-top:14px}
+.badge{flex:none;width:38px;height:38px;border-radius:12px;background:var(--navy);color:#fff;font-size:19px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.t-body{font-size:19.5px;color:var(--ink);line-height:1.5}
+.t-body b{color:var(--navy)}
+.warn{display:flex;align-items:center;gap:13px;margin-top:16px;background:var(--amber-soft);border:2px solid var(--amber-line);border-radius:14px;padding:13px 20px;font-size:17.5px;color:var(--amber-ink)}
+.warn svg{flex:none;color:#C98A0B}
+.warn b{color:#9A6A0B}
+
+/* ---- pregunta destacada ---- */
+.qbox{display:flex;gap:15px;align-items:flex-start;margin-top:16px;background:var(--orange-soft);border:2.5px solid var(--orange);border-radius:16px;padding:17px 24px}
+.qbox .qic{flex:none;color:var(--orange);margin-top:3px}
+.qbox .q{font-size:22px;font-weight:800;color:var(--navy);line-height:1.5}
+.qbox em{font-style:normal;color:var(--orange-deep);text-decoration:underline 3px rgba(249,115,22,.35);text-underline-offset:5px}
+
+/* ---- bloque instruccional navy ---- */
+.inst{display:flex;align-items:center;gap:14px;background:var(--navy);border-radius:16px;padding:14px 22px;color:#E8EEFA;font-size:18.5px;line-height:1.5}
+.inst svg{flex:none;color:#FFB067}
+.inst b{color:#FFC581}
+
+/* ---- desafío extra ---- */
+.btn{display:inline-flex;align-items:center;gap:10px;border:none;border-radius:13px;padding:13px 22px;font-family:inherit;font-size:16.5px;font-weight:800;cursor:pointer;transition:all .2s}
+.btn-bonus{background:#fff;color:var(--orange-deep);border:2.5px dashed var(--orange)}
+.btn-bonus:hover{background:var(--orange-soft);transform:translateY(-1px)}
+.bonus-cap{font-size:13px;font-weight:600;color:var(--muted)}
+.bonus{display:none;width:100%;background:var(--amber-soft);border:2px solid var(--amber-line);border-radius:16px;padding:15px 19px}
+.bonus.shown{display:block;animation:pop .45s ease}
+.bonus h4{display:flex;align-items:center;gap:10px;font-size:19.5px;font-weight:800;color:#9A6A0B}
+.bonus h4 svg{flex:none;color:#C98A0B}
+.bonus p{margin-top:6px;font-size:15.5px;line-height:1.5;color:var(--amber-ink)}
+.bonus p b{color:#9A6A0B}
+
+/* ---- Clase 2: activación ---- */
+.qbox.big{max-width:960px;padding:28px 36px}
+.qbox.big .q{font-size:26px;line-height:1.55}
+.think-sub{margin-top:18px;text-align:center;font-size:16.5px;color:var(--muted);font-weight:600}
+
+/* ---- Clase 2: trabajo en parejas ---- */
+.cols{display:flex;gap:16px;align-items:flex-start;margin-top:16px;flex:1}
+.col{display:flex;flex-direction:column;gap:14px}
+.col .task{margin-top:0;align-items:center}
+.col .qbox{margin-top:0}
+.eq-card{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 18px}
+.eq-k{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px}
+.eq-big{font-size:25px;font-weight:700;color:var(--navy)}
+.mini-t{border-collapse:separate;border-spacing:0;background:#fff;border:1.5px solid #D5DAE6;border-radius:10px;overflow:hidden;flex:none}
+.mini-t th{background:var(--navy);color:#fff;font-size:12.5px;font-weight:700;padding:4px 0;width:62px;font-family:Georgia,serif}
+.mini-t td{height:25px;border-top:1px solid #E8EBF3}
+.mini-t td + td{border-left:1px solid #E8EBF3}
+.desafio-col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;margin-top:2px}
+
+/* ---- Clase 2: la recta ---- */
+.plane-card{padding:12px 14px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.plane-head{display:flex;align-items:center;gap:10px}
+.grid-l{stroke:rgba(22,48,90,.09);stroke-width:1;fill:none}
+.axis{stroke:#16305A;stroke-width:2.4;stroke-linecap:round;fill:none}
+.tick{fill:#6E7C95;font-size:11px;font-family:Georgia,serif}
+.axname{fill:#16305A;font-size:15px;font-style:italic;font-family:Georgia,serif;font-weight:700}
+.line-main{stroke:#F97316;stroke-width:3.5;stroke-linecap:round}
+.sol-dot{fill:#16305A;opacity:.3}
+.opt-pt{fill:#fff;stroke:#16305A;stroke-width:3;cursor:pointer;transition:all .18s;transform-box:fill-box;transform-origin:center}
+.opt-pt:hover{stroke:#F97316;transform:scale(1.2)}
+.opt-pt.good{stroke:#16A34A;fill:#EAF7EF}
+.opt-pt.bad{stroke:#DC2626;fill:#FDECEC}
+.pt-lab{fill:#26334D;font-size:12.5px;font-weight:700;font-family:Georgia,serif}
+.inter-card{padding:15px 18px}
+.inter-k{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--orange-deep);margin-bottom:7px;display:flex;align-items:center;gap:8px}
+
+/* ---- Clase 2: evaluación ---- */
+.chiprow2{display:flex;justify-content:center;gap:12px;margin-top:16px}
+.eval-banner{max-width:800px}
+
+/* feedback */
+.feedback{display:none;margin-top:12px;text-align:center;font-size:17.5px;font-weight:600;border-radius:12px;padding:11px 18px;line-height:1.5}
+.feedback.shown{display:block;animation:pop .35s ease}
+.feedback.ok{background:var(--green-soft);border:1.5px solid #B7E3C4;color:#14532D}
+.feedback.no{background:var(--red-soft);border:1.5px solid #F3C1C1;color:#7F1D1D}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---- navegación ---- */
+#hud{position:fixed;right:20px;bottom:16px;display:flex;align-items:center;gap:10px;z-index:99}
+#hud .cnt{color:rgba(255,255,255,.92);font-size:13px;font-weight:700;letter-spacing:.05em;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);padding:9px 16px;border-radius:999px}
+#hud button{width:42px;height:42px;border-radius:50%;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+#hud button:hover{background:var(--orange);border-color:var(--orange);transform:translateY(-1px)}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<div id="stage">
+<!-- ============ DIAPOSITIVA 1 · PORTADA ============ -->
+<section class="slide cover">
+  <div class="pair" style="top:106px;left:104px;transform:rotate(-7deg)">(0, 15)</div>
+  <div class="pair" style="top:92px;right:118px;transform:rotate(6deg)">(5, 10)</div>
+  <div class="pair" style="top:336px;left:58px;transform:rotate(5deg)">(10, 5)</div>
+  <div class="pair" style="top:342px;right:64px;transform:rotate(-6deg)">(15, 0)</div>
+  <div class="pair" style="bottom:148px;left:148px;transform:rotate(4deg)">(16, −1)</div>
+  <div class="pair" style="bottom:150px;right:144px;transform:rotate(-5deg)">(−5, 20)</div>
+
+  <div class="chiprow">
+    <span class="chip">Clase 2</span>
+    <span class="chip navy">Unidad 2 · Matemática · I° Medio</span>
+  </div>
+  <h1>Ecuaciones en el plano</h1>
+  <p class="sub">Graficando infinitas soluciones</p>
+
+  <div class="cred card">
+    <div class="cred-grid">
+      <div class="cred-item">
+        <span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>
+        <span><span class="lbl">Profesor en práctica</span><br><span class="val">Javier Pulgar</span></span>
+      </div>
+      <div class="cred-item">
+        <span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg></span>
+        <span><span class="lbl">Profesor guía</span><br><span class="val">Felipe Espinoza</span></span>
+      </div>
+      <div class="cred-item">
+        <span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></span>
+        <span><span class="lbl">Universidad</span><br><span class="val">Universidad Alberto Hurtado</span></span>
+      </div>
+      <div class="cred-item">
+        <span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg></span>
+        <span><span class="lbl">Liceo</span><br><span class="val">Liceo Comercial Luis Correa Prieto</span></span>
+      </div>
+    </div>
+  </div>
+
+  <footer class="s-foot">
+    <span>Unidad 2 · Matemática · I° Medio</span>
+    <span class="r"><span>Ecuaciones lineales de dos incógnitas</span></span>
+  </footer>
+</section>
+
+<!-- ============ DIAPOSITIVA 2 · OBJETIVO ============ -->
+<section class="slide">
+  <header class="s-head">
+    <span class="chip">Clase 2</span>
+    <h2 class="s-title">Objetivo de la Clase</h2>
+  </header>
+
+  <div class="oa card">
+    <div class="oa-bar"></div>
+    <div class="oa-in">
+      <div class="oa-k">Objetivo de aprendizaje</div>
+      <p class="oa-t">&ldquo;<b>Representar gráficamente</b> una ecuación lineal de dos incógnitas, mediante la construcción de <b>tablas de valores</b> y la ubicación de <b>pares ordenados</b> en el <b>plano cartesiano</b>, trabajando de forma <b>responsable y proactiva</b>.&rdquo;</p>
+    </div>
+  </div>
+
+  <div class="minis">
+    <div class="mini card">
+      <div class="mic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg></div>
+      <div class="mt">Tablas de valores</div>
+      <div class="md">Organizamos los pares que cumplen la ecuación.</div>
+    </div>
+    <div class="mini card">
+      <div class="mic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="1.5"/></svg></div>
+      <div class="mt">Plano cartesiano</div>
+      <div class="md">Ubicamos cada par ordenado <span class="math">(<var>x</var>, <var>y</var>)</span>.</div>
+    </div>
+    <div class="mini card">
+      <div class="mic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20 20 4"/><circle cx="4" cy="20" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="20" cy="4" r="1.6"/></svg></div>
+      <div class="mt">La Recta</div>
+      <div class="md">Todas las soluciones juntas en una sola línea.</div>
+    </div>
+    <div class="mini card">
+      <div class="mic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
+      <div class="mt">Responsabilidad</div>
+      <div class="md">Trabajamos de forma responsable y proactiva.</div>
+    </div>
+  </div>
+
+  <footer class="s-foot">
+    <span>Unidad 2 · Matemática · I° Medio</span>
+    <span class="r"><span>Ecuaciones lineales de dos incógnitas</span></span>
+  </footer>
+</section>
+
+<!-- ============ DIAPOSITIVA 3 · ACTIVACIÓN ============ -->
+<section class="slide">
+  <header class="s-head">
+    <span class="chip">Clase 2</span>
+    <h2 class="s-title">Activación</h2>
+    <span class="chip soft push">Conversación con el curso</span>
+  </header>
+
+  <div style="margin:auto;display:flex;flex-direction:column;align-items:center;">
+    <div class="qbox big">
+      <span class="qic"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+      <p class="q">Si una ecuación tiene <em>infinitas soluciones</em>, ¿cómo podemos mostrarlas todas juntas al mismo tiempo <em>sin escribir una tabla infinita</em>?</p>
+    </div>
+    <p class="think-sub">Toma un momento para pensar: la respuesta la construimos juntos.</p>
+  </div>
+
+  <footer class="s-foot">
+    <span>Unidad 2 · Matemática · I° Medio</span>
+    <span class="r"><span>Ecuaciones lineales de dos incógnitas</span></span>
+  </footer>
+</section>
+
+<!-- ============ DIAPOSITIVA 4 · TRABAJO EN PAREJAS ============ -->
+<section class="slide">
+  <header class="s-head">
+    <span class="chip">Clase 2</span>
+    <h2 class="s-title">Trabajo en Parejas</h2>
+    <span class="chip ghost push"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Con tu guía</span>
+  </header>
+
+  <div class="cols">
+    <div class="col" style="flex:1">
+      <div class="task card">
+        <div class="badge">1</div>
+        <div class="t-body">Completen las <b>tablas de valores</b> en su guía.</div>
+      </div>
+      <div class="task card">
+        <div class="badge">2</div>
+        <div class="t-body">Ubiquen los <b>pares ordenados</b> en el plano cartesiano.</div>
+      </div>
+      <div class="qbox">
+        <span class="qic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+        <p class="q" style="font-size:20.5px">¿Qué pasa con los <em>espacios entre los puntos</em>? ¿Podrían <em>unirlos con una línea</em>?</p>
+      </div>
+    </div>
+
+    <div class="col" style="width:410px;flex:none">
+      <div class="eq-card card">
+        <div>
+          <div class="eq-k">Ecuación 1</div>
+          <div class="eq-big math"><var>x</var> + <var>y</var> = 15</div>
+        </div>
+        <table class="mini-t">
+          <thead><tr><th>x</th><th>y</th></tr></thead>
+          <tbody><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr></tbody>
+        </table>
+      </div>
+      <div class="eq-card card">
+        <div>
+          <div class="eq-k">Ecuación 2</div>
+          <div class="eq-big math">2<var>x</var> − <var>y</var> = 20</div>
+        </div>
+        <table class="mini-t">
+          <thead><tr><th>x</th><th>y</th></tr></thead>
+          <tbody><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr></tbody>
+        </table>
+      </div>
+      <div class="desafio-col">
+        <div id="bonusIntro" style="display:flex;flex-direction:column;align-items:center;gap:7px;">
+          <button id="bonusBtn" class="btn btn-bonus"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Desafío extra</button>
+          <span class="bonus-cap">¿Van muy rápido? ¡Pulsen aquí!</span>
+        </div>
+        <div id="bonusCard" class="bonus noclick">
+          <h4><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>¿Existe una solución oculta?</h4>
+          <p>Encuentren una solución de <b>x + y = 15</b> con <b>decimales o negativos</b>: ¿dónde queda en el plano? Pista: estará sobre la recta, aunque no esté en su tabla.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="s-foot">
+    <span>Unidad 2 · Matemática · I° Medio</span>
+    <span class="r"><span>Ecuaciones lineales de dos incógnitas</span></span>
+  </footer>
+</section>
+
+<!-- ============ DIAPOSITIVA 5 · LA RECTA (INSTITUCIONALIZACIÓN) ============ -->
+<section class="slide">
+  <header class="s-head">
+    <span class="chip">Clase 2</span>
+    <h2 class="s-title">La Recta</h2>
+    <span class="chip soft push">Síntesis</span>
+  </header>
+
+  <div class="cols" style="margin-top:14px">
+    <div class="col" style="flex:none">
+      <div class="plane-card card">
+        <div class="plane-head">
+          <span class="chip soft" style="padding:5px 12px;font-size:12px">2x + y = 10</span>
+          <span style="font-size:13px;color:var(--muted);font-weight:600">la ecuación del kiosco (Clase 1)</span>
+        </div>
+        <svg viewBox="0 0 480 470" width="424" height="415" role="img" aria-label="Plano cartesiano con la recta 2x más y igual a 10 y tres puntos para comprobar">
+          <path class="grid-l" d="M38 46V454M72 46V454M106 46V454M174 46V454M208 46V454M242 46V454M276 46V454M310 46V454M344 46V454M38 454H344M38 386H344M38 352H344M38 318H344M38 284H344M38 250H344M38 216H344M38 182H344M38 148H344M38 114H344M38 80H344M38 46H344"/>
+          <line class="axis" x1="22" y1="420" x2="366" y2="420"/>
+          <path class="axis" d="M358 414l10 6-10 6"/>
+          <line class="axis" x1="140" y1="462" x2="140" y2="34"/>
+          <path class="axis" d="M134 42l6-10 6 10"/>
+          <text class="axname" x="374" y="425">x</text>
+          <text class="axname" x="122" y="36">y</text>
+          <text class="tick" x="130" y="438" text-anchor="middle">0</text>
+          <text class="tick" x="72" y="438" text-anchor="middle">−2</text>
+          <text class="tick" x="106" y="438" text-anchor="middle">−1</text>
+          <text class="tick" x="174" y="438" text-anchor="middle">1</text>
+          <text class="tick" x="208" y="438" text-anchor="middle">2</text>
+          <text class="tick" x="242" y="438" text-anchor="middle">3</text>
+          <text class="tick" x="276" y="438" text-anchor="middle">4</text>
+          <text class="tick" x="310" y="438" text-anchor="middle">5</text>
+          <text class="tick" x="126" y="390" text-anchor="end">1</text>
+          <text class="tick" x="126" y="356" text-anchor="end">2</text>
+          <text class="tick" x="126" y="322" text-anchor="end">3</text>
+          <text class="tick" x="126" y="288" text-anchor="end">4</text>
+          <text class="tick" x="126" y="254" text-anchor="end">5</text>
+          <text class="tick" x="126" y="220" text-anchor="end">6</text>
+          <text class="tick" x="126" y="186" text-anchor="end">7</text>
+          <text class="tick" x="126" y="152" text-anchor="end">8</text>
+          <text class="tick" x="126" y="118" text-anchor="end">9</text>
+          <text class="tick" x="126" y="84" text-anchor="end">10</text>
+          <line class="line-main" x1="123" y1="46" x2="327" y2="454"/>
+          <circle class="sol-dot" cx="140" cy="80" r="4.5"/>
+          <circle class="sol-dot" cx="174" cy="148" r="4.5"/>
+          <circle class="sol-dot" cx="242" cy="284" r="4.5"/>
+          <circle class="sol-dot" cx="310" cy="420" r="4.5"/>
+          <circle class="opt-pt" data-ok="1" data-cuenta="2·(2) + 6 = 4 + 6 = 10" cx="208" cy="216" r="9"/>
+          <circle class="opt-pt" data-ok="1" data-cuenta="2·(4) + 2 = 8 + 2 = 10" cx="276" cy="352" r="9"/>
+          <circle class="opt-pt" data-ok="0" data-cuenta="2·(1) + 9 = 2 + 9 = 11, y 11 ≠ 10" cx="174" cy="114" r="9"/>
+          <text class="pt-lab" x="224" y="212">(2, 6)</text>
+          <text class="pt-lab" x="292" y="348">(4, 2)</text>
+          <text class="pt-lab" x="190" y="110">(1, 9)</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="col" style="flex:1">
+      <div class="oa card" style="margin-top:0">
+        <div class="oa-bar"></div>
+        <div class="oa-in" style="padding:18px 24px">
+          <div class="oa-k">La gran conclusión</div>
+          <p class="oa-t" style="font-size:21px">La línea recta es la representación gráfica de <b>TODAS las infinitas soluciones</b> de la ecuación.</p>
+        </div>
+      </div>
+
+      <div class="qbox reveal" style="margin-top:0">
+        <span class="qic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+        <p class="q" style="font-size:20px">Si marco un punto <em>cualquiera sobre la línea</em>, ¿será solución de la ecuación? ¿Y si marco un punto <em>fuera de la línea</em>?</p>
+      </div>
+
+      <div class="inter-card card">
+        <div class="inter-k"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>Comprobemos en el plano</div>
+        <p style="font-size:15px;color:var(--muted);font-weight:600;">Pulsa un punto y veamos si cumple la ecuación:</p>
+        <div id="fbPlane" class="feedback" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="s-foot">
+    <span>Unidad 2 · Matemática · I° Medio</span>
+    <span class="r"><span>Ecuaciones lineales de dos incógnitas</span><span class="hint"><span class="hintdot"></span>Clic para avanzar · pulsa los puntos del plano</span></span>
+  </footer>
+</section>
+
+<!-- ============ DIAPOSITIVA 6 · EVALUACIÓN FINAL (FCE-2) ============ -->
+<section class="slide">
+  <header class="s-head">
+    <span class="chip">Clase 2</span>
+    <h2 class="s-title">Evaluación Final</h2>
+    <span class="chip ghost push"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>Ticket de Salida · FCE-2</span>
+  </header>
+
+  <div style="margin:auto;display:flex;flex-direction:column;align-items:center;">
+    <div class="inst" style="max-width:820px;padding:20px 28px;font-size:21px;">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+      <span>Guarda tu guía y resuelve de forma <b>individual</b> el <b>Ticket de Salida (FCE-2)</b>.</span>
+    </div>
+
+    <div class="chiprow2">
+      <span class="chip ghost"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Individual</span>
+    </div>
+
+    <div class="warn eval-banner">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
+      <span><b>Importante:</b> entrega el Ticket de Salida al profesor cuando termines.</span>
+    </div>
+  </div>
+
+  <footer class="s-foot">
+    <span>Unidad 2 · Matemática · I° Medio</span>
+    <span class="r"><span>Ecuaciones lineales de dos incógnitas</span></span>
+  </footer>
+</section>
+</div>
+
+<div id="hud">
+  <button id="bPrev" aria-label="Diapositiva anterior" title="Anterior (←)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="14 6 8 12 14 18"/></svg></button>
+  <span class="cnt" id="counter">1 / 6</span>
+  <button id="bNext" aria-label="Diapositiva siguiente" title="Siguiente (→)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="10 6 16 12 10 18"/></svg></button>
+</div>
+
+<script>
+(function(){
+  var stage = document.getElementById('stage');
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var counter = document.getElementById('counter');
+  var bar = document.getElementById('progress');
+  var cur = 0;
+
+  function fit(){
+    var s = Math.min(window.innerWidth / 1310, window.innerHeight / 775);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit); fit();
+
+  function show(i){
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function(s, k){
+      s.classList.toggle('active', k === i);
+      s.classList.toggle('before', k < i);
+    });
+    cur = i;
+    counter.textContent = (i + 1) + ' / ' + slides.length;
+    bar.style.width = ((i + 1) / slides.length * 100) + '%';
+  }
+  function next(){
+    var r = slides[cur].querySelector('.reveal:not(.shown):not(.noclick)');
+    if (r){ r.classList.add('shown'); return; }
+    show(cur + 1);
+  }
+  function prev(){
+    var rs = slides[cur].querySelectorAll('.reveal.shown:not(.noclick)');
+    if (rs.length){ rs[rs.length - 1].classList.remove('shown'); return; }
+    show(cur - 1);
+  }
+
+  document.getElementById('bNext').addEventListener('click', next);
+  document.getElementById('bPrev').addEventListener('click', prev);
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp'){ e.preventDefault(); prev(); }
+    else if (e.key === 'Home'){ show(0); }
+    else if (e.key === 'End'){ show(slides.length - 1); }
+  });
+
+  stage.addEventListener('click', function(e){
+    if (e.target.closest('button, .opt-pt, .noclick')) return;
+    next();
+  });
+
+  var bonusBtn = document.getElementById('bonusBtn');
+  if (bonusBtn){
+    bonusBtn.addEventListener('click', function(){
+      document.getElementById('bonusIntro').style.display = 'none';
+      document.getElementById('bonusCard').classList.add('shown');
+    });
+  }
+
+  var fbP = document.getElementById('fbPlane');
+  Array.prototype.forEach.call(document.querySelectorAll('.opt-pt'), function(p){
+    p.addEventListener('click', function(){
+      Array.prototype.forEach.call(document.querySelectorAll('.opt-pt'), function(o){ o.classList.remove('good','bad'); });
+      if (p.getAttribute('data-ok') === '1'){
+        p.classList.add('good');
+        fbP.className = 'feedback ok shown';
+        fbP.innerHTML = '<b>¡Sí es solución!</b> ' + p.getAttribute('data-cuenta') + '. El punto está <b>sobre la recta</b>.';
+      } else {
+        p.classList.add('bad');
+        fbP.className = 'feedback no shown';
+        fbP.innerHTML = '<b>No es solución.</b> ' + p.getAttribute('data-cuenta') + '. El punto queda <b>fuera de la recta</b>.';
+      }
+    });
+  });
+
+  show(0);
+})();
+</script>
+</body>
+</html>
